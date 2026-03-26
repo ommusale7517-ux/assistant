@@ -138,7 +138,7 @@ if __name__ == "__main__":
     try:
         with sr.Microphone() as source:
           print("Listening the wake word ...!")
-          audio = r.listen(source, timeout=4, phrase_time_limit=3)# timeout is use to do speech recognization faster.
+          audio = r.listen(source, timeout=5, phrase_time_limit=4)# timeout is use to do speech recognization faster.
         word = r.recognize_google(audio)
         if(word.lower() == "jarvis"):
            speak("Yes Sir...!") 
@@ -155,5 +155,7 @@ if __name__ == "__main__":
     
     except Exception as e:
        print("Error; {0}".format(e))
+
+
    
       
