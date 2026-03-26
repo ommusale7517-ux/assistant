@@ -111,7 +111,7 @@ def proccessCommand(c):
 
             speak("Here are the top headlines")
 
-            for i, article in enumerate(articles[:5], start=1):
+            for i, article in enumerate(articles[:4], start=1):
                 title = article.get('title')
                 if title:
                     print(f"{i}. {title}")
