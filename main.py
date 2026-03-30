@@ -1,17 +1,53 @@
+import os
 import speech_recognition as sr 
 import webbrowser
 import pyttsx3
 import musicLibrary
 import requests
 import time
-
+from huggingface_hub import InferenceClient
 # Initialize tools
+
 recognizer = sr.Recognizer() 
 engine = pyttsx3.init() 
 
 # API's
-news_url = "https://newsapi.org/v2/everything?q=india&sortBy=publishedAt&apiKey=6d27ad6753de411c904c8043b2a1c6a1"
-weather_api_key = "138f7429af66009402f0ea8ad8fb91d3"
+news_api_key = os.getenv("NEWS_API_KEY", "")
+weather_api_key = os.getenv("OPENWEATHER_API_KEY", "")
+hf_token = os.getenv("HF_API_KEY", "")
+
+news_url = f"https://newsapi.org/v2/everything?q=india&sortBy=publishedAt&apiKey={news_api_key}"
+apiurl = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct"
+
+headers = {
+    "Authorization": f"Bearer {hf_token}"
+}
+payload = {"inputs": "Hello Jarvis, how are you?"}
+# Import at the top
+
+
+# Initialize Hugging Face client with your token
+client = InferenceClient(api_key=hf_token)
+
+def ask_jarvis_ai(prompt):
+    """
+    Send prompt to Hugging Face LLM using the conversational API safely.
+    """
+    try:
+        # Use generate instead of calling chat directly
+        response = client.chat.generate(
+            model="deepseek-ai/DeepSeek-V3.2",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        # The text is inside response[0].content
+        if response and len(response) > 0:
+            return response[0].content
+        else:
+            return "AI returned an empty response."
+    except Exception as e:
+        print("Hugging Face AI Error:", e)
+        return "Sorry Sir, AI is having trouble thinking right now."
+
 
 def speak(text):
     engine.say(text)
@@ -150,7 +186,7 @@ def proccessCommand(c):
             print("Error:", e)
             speak("Something went wrong while fetching news.")
 
-    # ✅ NEW: Just say "weather" and Jarvis will ask for the city
+    # NEW: Just say "weather" and Jarvis will ask for the city
     elif "weather" in c.lower():
         speak("Please tell me the city name.")
         city = listen_city()
@@ -161,6 +197,11 @@ def proccessCommand(c):
             speak(weather_report)
         else:
             speak("Sorry Sir, I could not hear the city name. Please try again.")
+    else:
+       speak("Let me think...")
+       ai_response = ask_jarvis_ai(c)
+       print("Jarvis AI:", ai_response)
+       speak(ai_response)
 
 if __name__ == "__main__":
     speak("Initializing Jarvis....")
@@ -186,4 +227,4 @@ if __name__ == "__main__":
                     proccessCommand(command)
         
         except Exception as e:
-            print("Error; {0}".format(e))
+            print("Error:", e)
