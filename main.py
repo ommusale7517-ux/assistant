@@ -1,49 +1,76 @@
 import os
-import speech_recognition as sr 
+import speech_recognition as sr
 import webbrowser
 import pyttsx3
 import musicLibrary
 import requests
-import time
 from huggingface_hub import InferenceClient
-# Initialize tools
+from dotenv import load_dotenv
 
-recognizer = sr.Recognizer() 
-engine = pyttsx3.init() 
-
-# API's
-news_api_key = os.getenv("NEWS_API_KEY", "")
-weather_api_key = os.getenv("OPENWEATHER_API_KEY", "")
-hf_token = os.getenv("HF_API_KEY", "")
+load_dotenv()
+recognizer = sr.Recognizer()
+engine = pyttsx3.init()
+news_api_key = os.getenv("NEWS_API_KEY")
+weather_api_key = os.getenv("OPENWEATHER_API_KEY")
+hf_token = os.getenv("HF_API_KEY")
 
 news_url = f"https://newsapi.org/v2/everything?q=india&sortBy=publishedAt&apiKey={news_api_key}"
-apiurl = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct"
-
-headers = {
-    "Authorization": f"Bearer {hf_token}"
-}
-payload = {"inputs": "Hello Jarvis, how are you?"}
-# Import at the top
-
-
-# Initialize Hugging Face client with your token
 client = InferenceClient(api_key=hf_token)
 
+websites = {
+    "google": "https://google.com",
+    "facebook": "https://facebook.com",
+    "youtube": "https://youtube.com",
+    "linkedin": "https://linkedin.com",
+    "flipkart": "https://flipkart.com",
+    "discord": "https://discord.com",
+    "slack": "https://slack.com",
+    "zoom": "https://zoom.us",
+    "skype": "https://skype.com",
+    "puma": "https://puma.com",
+    "myntra": "https://myntra.com",
+    "ajio": "https://ajio.com",
+    "nykaa": "https://nykaa.com",
+    "tatacliq": "https://tatacliq.com",
+    "snapdeal": "https://snapdeal.com",
+    "shopify": "https://shopify.com",
+    "etsy": "https://etsy.com",
+    "aliexpress": "https://aliexpress.com",
+    "alibaba": "https://alibaba.com",
+    "flipboard": "https://flipboard.com",
+    "feedly": "https://feedly.com",
+    "pocket": "https://getpocket.com",
+    "instapaper": "https://instapaper.com",
+    "calendly": "https://calendly.com",
+    "timeanddate": "https://timeanddate.com",
+    "world clock": "https://worldclock.com",
+    "dictionary": "https://dictionary.com",
+    "thesaurus": "https://thesaurus.com",
+    "grammarly": "https://grammarly.com",
+    "reword": "https://reword.co",
+    "deepl": "https://deepl.com",
+    "translate": "https://translate.google.com",
+    "tts": "https://ttsmp3.com",
+    "10fastfingers": "https://10fastfingers.com",
+    "monkeytype": "https://monkeytype.com",
+    "keybr": "https://keybr.com",
+    "whatsapp": "https://whatsapp.com"
+}
+
 def ask_jarvis_ai(prompt):
-    """
-    Send prompt to Hugging Face LLM using the conversational API safely.
-    """
     try:
-        # Use generate instead of calling chat directly
-        response = client.chat.generate(
-            model="deepseek-ai/DeepSeek-V3.2",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        # The text is inside response[0].content
-        if response and len(response) > 0:
-            return response[0].content
+        apiurl = "https://router.huggingface.co/hf-inference/models/deepseek-ai/DeepSeek-V3.2"
+        headers = {"Authorization": f"Bearer {hf_token}", "Content-Type": "application/json"}
+        payload = {"inputs": prompt, "parameters": {"max_new_tokens": 100}}
+        response = requests.post(apiurl, headers=headers, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            if isinstance(data, list) and len(data) > 0:
+                return data[0].get("generated_text", "AI returned an empty response.")
+            else:
+                return "AI returned an empty response."
         else:
-            return "AI returned an empty response."
+            return "Sorry Sir, AI is having trouble thinking right now."
     except Exception as e:
         print("Hugging Face AI Error:", e)
         return "Sorry Sir, AI is having trouble thinking right now."
@@ -73,7 +100,7 @@ def get_weather(city_name):
     response = requests.get(complete_url)
     data = response.json()
 
-    if data["cod"] != "404":
+    if data.get("cod") == 200:
         main = data["main"]
         weather_desc = data["weather"][0]["description"]
         temp = main["temp"]
@@ -83,88 +110,22 @@ def get_weather(city_name):
                   f"with {weather_desc}. The humidity is {humidity} percent.")
         return report
     else:
-        return "Sorry Sir, I couldn't find that city."
+        return f"Sorry Sir, I couldn't find that city. Error: {data.get('message', 'Unknown error')}"
 
-def proccessCommand(c):
-    if "open google" in c.lower():
-        webbrowser.open("https://google.com")
-    elif "open facebook" in c.lower():
-        webbrowser.open("https://facebook.com")
-    elif "open youtube" in c.lower():
-        webbrowser.open("https://youtube.com")
-    elif "open linkedin" in c.lower():
-        webbrowser.open("https://linkedin.com")
-    elif "open flipkart" in c.lower():
-        webbrowser.open("https://flipkart.com")
-    elif "open discord" in c.lower():
-        webbrowser.open("https://discord.com")
-    elif "open slack" in c.lower():
-        webbrowser.open("https://slack.com")
-    elif "open zoom" in c.lower():
-        webbrowser.open("https://zoom.us")
-    elif "open skype" in c.lower():
-        webbrowser.open("https://skype.com")
-    elif "open puma" in c.lower():
-        webbrowser.open("https://puma.com")
-    elif "open myntra" in c.lower():
-        webbrowser.open("https://myntra.com")
-    elif "open ajio" in c.lower():
-        webbrowser.open("https://ajio.com")
-    elif "open nykaa" in c.lower():
-        webbrowser.open("https://nykaa.com")
-    elif "open tatacliq" in c.lower():
-        webbrowser.open("https://tatacliq.com")
-    elif "open snapdeal" in c.lower():
-        webbrowser.open("https://snapdeal.com")
-    elif "open shopify" in c.lower():
-        webbrowser.open("https://shopify.com")
-    elif "open etsy" in c.lower():
-        webbrowser.open("https://etsy.com")
-    elif "open aliexpress" in c.lower():
-        webbrowser.open("https://aliexpress.com")
-    elif "open alibaba" in c.lower():
-        webbrowser.open("https://alibaba.com")
-    elif "open flipboard" in c.lower():
-        webbrowser.open("https://flipboard.com")
-    elif "open feedly" in c.lower():
-        webbrowser.open("https://feedly.com")
-    elif "open pocket" in c.lower():
-        webbrowser.open("https://getpocket.com")
-    elif "open instapaper" in c.lower():
-        webbrowser.open("https://instapaper.com")
-    elif "open calendly" in c.lower():
-        webbrowser.open("https://calendly.com")
-    elif "open timeanddate" in c.lower():
-        webbrowser.open("https://timeanddate.com")
-    elif "open world clock" in c.lower():
-        webbrowser.open("https://worldclock.com")
-    elif "open dictionary" in c.lower():
-        webbrowser.open("https://dictionary.com")
-    elif "open thesaurus" in c.lower():
-        webbrowser.open("https://thesaurus.com")
-    elif "open grammarly" in c.lower():
-        webbrowser.open("https://grammarly.com")
-    elif "open reword" in c.lower():
-        webbrowser.open("https://reword.co")
-    elif "open deepl" in c.lower():
-        webbrowser.open("https://deepl.com")
-    elif "open translate" in c.lower():
-        webbrowser.open("https://translate.google.com")
-    elif "open tts" in c.lower():
-        webbrowser.open("https://ttsmp3.com")
-    elif "open 10fastfingers" in c.lower():
-        webbrowser.open("https://10fastfingers.com")
-    elif "open monkeytype" in c.lower():
-        webbrowser.open("https://monkeytype.com")
-    elif "open keybr" in c.lower():
-        webbrowser.open("https://keybr.com")
-    elif "open whatsapp" in c.lower():
-        webbrowser.open("https://whatsapp.com")
-    elif c.lower().startswith("play"):
-        song = c.lower().split(" ")[1] 
-        link = musicLibrary.music[song] 
-        webbrowser.open(link)    
-    elif "news" in c.lower():
+def processCommand(c):
+    c_lower = c.lower()
+    for site, url in websites.items():
+        if f"open {site}" in c_lower:
+            webbrowser.open(url)
+            return
+    if c_lower.startswith("play"):
+        song = c_lower.replace("play", "").strip()
+        if song in musicLibrary.music:
+            webbrowser.open(musicLibrary.music[song])
+        else:
+            speak("Sorry Sir, I couldn't find that song in the library.")
+        return
+    if "news" in c_lower:
         speak("Fetching latest news...")
         try:
             r = requests.get(news_url)
@@ -185,9 +146,8 @@ def proccessCommand(c):
         except Exception as e:
             print("Error:", e)
             speak("Something went wrong while fetching news.")
-
-    # NEW: Just say "weather" and Jarvis will ask for the city
-    elif "weather" in c.lower():
+        return
+    if "weather" in c_lower:
         speak("Please tell me the city name.")
         city = listen_city()
         if city:
@@ -197,11 +157,11 @@ def proccessCommand(c):
             speak(weather_report)
         else:
             speak("Sorry Sir, I could not hear the city name. Please try again.")
-    else:
-       speak("Let me think...")
-       ai_response = ask_jarvis_ai(c)
-       print("Jarvis AI:", ai_response)
-       speak(ai_response)
+        return
+    speak("Let me think...")
+    ai_response = ask_jarvis_ai(c)
+    print("Jarvis AI:", ai_response)
+    speak(ai_response)
 
 if __name__ == "__main__":
     speak("Initializing Jarvis....")
@@ -224,7 +184,7 @@ if __name__ == "__main__":
                     print("Give me the command : SIR..!")
                     audio = r.listen(source)
                     command = r.recognize_google(audio)
-                    proccessCommand(command)
+                    processCommand(command)
         
         except Exception as e:
             print("Error:", e)
